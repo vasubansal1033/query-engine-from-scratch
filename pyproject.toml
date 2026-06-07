@@ -1,0 +1,16 @@
+[project]
+name = "query-engine-from-scratch"
+version = "0.1.0"
+description = "Rootconf workshop on building an analytics SQL query engine from scratch"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pyarrow>=24.0.0",
+    "sqloxide>=0.61.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "ruff>=0.15.16",
+]
