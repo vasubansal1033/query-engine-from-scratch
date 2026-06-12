@@ -8,22 +8,6 @@ if TYPE_CHECKING:
 
 FILE_NAME = "data/sample_1.parquet"
 
-def extract_operand(operand: dict[str, Any], row: dict[str, Any]) -> float:
-    if "Identifier" in operand:
-        operand = operand["Identifier"]["value"]
-        operand = float(row[operand])
-    elif "Value" in operand:
-        operand = operand["Value"]["value"]["Number"][0]
-        operand = float(operand)
-    elif "BinaryOp" in operand:
-        operand = execute_expr(row, operand)
-    elif "Nested" in operand:
-        # to handle brackets e.g., (age * 2) - 1
-        nested = operand["Nested"]
-        operand = execute_expr(row, nested)
-
-    return operand
-
 def execute_binary_op(operation: str, left_operand: float, right_operand: float) -> float:
     if operation == "Plus":
         return left_operand + right_operand
@@ -42,17 +26,18 @@ def execute_expr(row: dict[str, Any], expr: "Expr") -> Any:
     if "Value" in expr:
         value = expr["Value"]["value"]["Number"][0]
         return float(value)
-
     elif "Identifier" in expr:
         column_name = expr["Identifier"]["value"]
         return float(row[column_name])
-
+    elif "Nested" in expr:
+        nested = expr["Nested"]
+        return execute_expr(row, nested)
     elif "BinaryOp" in expr:
         binary_op = expr["BinaryOp"]
         operation = binary_op["op"]
 
-        left_operand = extract_operand(binary_op["left"], row)
-        right_operand = extract_operand(binary_op["right"], row)
+        left_operand = execute_expr(row, binary_op["left"])
+        right_operand = execute_expr(row, binary_op["right"])
         return execute_binary_op(
             operation,
             left_operand,
