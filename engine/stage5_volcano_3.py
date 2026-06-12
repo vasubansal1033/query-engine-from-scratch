@@ -8,11 +8,58 @@ if TYPE_CHECKING:
 
 FILE_NAME = "data/sample_1.parquet"
 
+def extract_operand(operand: dict[str, Any], row: dict[str, Any]) -> float:
+    if "Identifier" in operand:
+        operand = operand["Identifier"]["value"]
+        operand = float(row[operand])
+    elif "Value" in operand:
+        operand = operand["Value"]["value"]["Number"][0]
+        operand = float(operand)
+    elif "BinaryOp" in operand:
+        operand = execute_expr(row, operand)
+    elif "Nested" in operand:
+        # to handle brackets e.g., (age * 2) - 1
+        nested = operand["Nested"]
+        operand = execute_expr(row, nested)
+
+    return operand
+
+def execute_binary_op(operation: str, left_operand: float, right_operand: float) -> float:
+    if operation == "Plus":
+        return left_operand + right_operand
+    elif operation == "Multiply":
+        return left_operand * right_operand
+    elif operation == "Minus":
+        return left_operand - right_operand
+    elif operation == "Divide":
+        if right_operand == 0:
+            raise Exception(f"division by zero: {left_operand} / {right_operand}")
+        return left_operand / right_operand
+    else:
+        raise Exception(f"unknown binary op: {operation}")
 
 def execute_expr(row: dict[str, Any], expr: "Expr") -> Any:
-    # TODO
-    ...
+    if "Value" in expr:
+        value = expr["Value"]["value"]["Number"][0]
+        return float(value)
 
+    elif "Identifier" in expr:
+        column_name = expr["Identifier"]["value"]
+        return float(row[column_name])
+
+    elif "BinaryOp" in expr:
+        binary_op = expr["BinaryOp"]
+        operation = binary_op["op"]
+
+        left_operand = extract_operand(binary_op["left"], row)
+        right_operand = extract_operand(binary_op["right"], row)
+        return execute_binary_op(
+            operation,
+            left_operand,
+            right_operand
+        )
+
+    raise Exception(f"unknown expr: {expr}")
 
 def run(sql: str) -> None:
     select = parse_sql(sql, dialect="ansi")[0]["Query"]["body"]["Select"]
@@ -27,7 +74,7 @@ def run(sql: str) -> None:
         if "UnnamedExpr" in item:
             expr = item["UnnamedExpr"]
             alias = expr.get("Identifier", {}).get("value", "?column?")
-        else:
+        elif "ExprWithAlias" in item:
             expr = item["ExprWithAlias"]["expr"]
             alias = item["ExprWithAlias"]["alias"]["value"]
         output_exprs[alias] = expr
