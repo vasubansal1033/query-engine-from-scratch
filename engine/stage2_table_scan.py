@@ -12,19 +12,28 @@ def scan_table_full(filename: str) -> list[dict[str, Any]]:
 # we don't want to read the whole file at once and then select, filter, aggregate, etc.
 # what if we could read one row at a time?
 def scan_table() -> list[dict[str, Any]]:
-    # TODO
-    ...
+    file = pq.ParquetFile(FILE_NAME)
+    iter = file.iter_batches(1)
+    result = []
+    
+    for batch in iter:
+        result.append(batch.to_pylist()[0])
+
+    return result
 
 
 class TableScan:
     def __init__(self):
-        # TODO
-        ...
+        self.file = pq.ParquetFile(FILE_NAME)
+        self.iter = self.file.iter_batches(1)
 
     def next(self) -> dict[str, Any] | None:
-        # TODO
-        ...
+        next_row = next(self.iter, None)
+        if next_row is None:
+            return None
+            
+        row = next_row.to_pylist()[0]
+        return row
 
     def close(self):
-        # TODO
-        ...
+        self.file.close()
