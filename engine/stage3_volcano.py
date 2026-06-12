@@ -32,8 +32,17 @@ class Projection(Operator):
         self._child = child
 
     def next(self) -> dict[str, Any] | None:
-        # TODO
-        ...
+        maybe_row = self._child.next()
+        if not maybe_row:
+            return None
+        
+        return {
+            "name": maybe_row["name"],
+            "age": maybe_row["age"] + 1
+        }
+
+    def close(self):
+        self._child.close()
 
 
 # select name, age + 1 as age from users;

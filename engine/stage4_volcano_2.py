@@ -44,8 +44,14 @@ class Filter(Operator):
         self._child = child
 
     def next(self) -> dict[str, Any] | None:
-        # TODO
-        ...
+        maybe_row = self._child.next()
+        if not maybe_row:
+            return None
+
+        if maybe_row["age"] <= 25:
+            return self.next()
+
+        return maybe_row
 
     def close(self):
         self._child.close()
