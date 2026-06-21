@@ -4,6 +4,10 @@ Hands-on workshop at the [Rootconf Topical Edition on Databases](https://hasgeek
 
 Workshop details: https://hasgeek.com/rootconf/build-a-sql-query-engine-from-scratch-workshop/
 
+## What we built
+
+For a walkthrough of each stage in `engine/` — from handwritten queries to pipelined, vectorized execution — see **[UNDERSTANDING.md](UNDERSTANDING.md)**.
+
 ## Set up
 
 Please have the following ready before attending the workshop. No additional time will be provided for setup.
